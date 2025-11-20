@@ -13,64 +13,72 @@ interface Props {
 
 // Visual component to simulate the internal cross-wiring of a rotor
 const WiringVisual: React.FC<{ rotorType: string }> = ({ rotorType }) => {
-  // Create a stable visual based on the rotor name so it doesn't jitter on re-render
-  // but looks different for different rotors
+  // Create a stable visual based on the rotor name
   const seed = rotorType.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   
   const wires = [];
-  const numWires = 26; // Full alphabet density for realism
+  const numWires = 26; // Full alphabet density
   
   for (let i = 0; i < numWires; i++) {
-    // Distribute start points evenly
-    const y1 = 5 + (i / numWires) * 90;
+    const y1 = 4 + (i / numWires) * 92;
     
-    // Pseudo-random end points based on seed to simulate permutation
     // Deterministic random based on seed + i
     const rand = (Math.sin(seed * (i + 1) * 13.37) + 1) / 2; // 0..1
-    const y2 = 5 + (rand * 90); 
+    const y2 = 4 + (rand * 92); 
     
-    // Colors: Copper, Oxide Copper, Bright Brass, Bronze
-    const colors = ['#f59e0b', '#d97706', '#b45309', '#92400e', '#fdba74']; 
-    // Pick color based on randomness
+    // Colors: Copper, Oxide Copper, Bright Brass
+    const colors = ['#b45309', '#d97706', '#f59e0b', '#fbbf24']; 
     const colorIndex = Math.floor((Math.sin(seed + i) + 1) * 2.5) % colors.length;
     const color = colors[colorIndex];
     
-    // Control points for Bezier curves to make them look like tangible wires crossing over
-    // We vary the Y control points to create 'arching' effects for wires travelling far distances
+    // Control points for Bezier curves to make them look like tangible wires
     const dist = Math.abs(y2 - y1);
-    const arch = dist * 0.6;
+    const arch = 10 + dist * 0.4;
     const cp1y = y1 + (y2 > y1 ? arch : -arch);
     const cp2y = y2 - (y2 > y1 ? arch : -arch);
 
     wires.push(
         <g key={i}>
+            {/* Wire Shadow/Base */}
             <path 
-                d={`M 0 ${y1} C 35 ${cp1y}, 65 ${cp2y}, 100 ${y2}`}
+                d={`M 0 ${y1} C 30 ${cp1y}, 70 ${cp2y}, 100 ${y2}`}
                 stroke={color}
-                strokeWidth={0.8}
+                strokeWidth={1.5}
                 fill="none"
-                opacity={0.9}
-                className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]"
+                strokeLinecap="round"
+                className="opacity-90"
+            />
+            {/* Wire Highlight (Specular) */}
+            <path 
+                d={`M 0 ${y1} C 30 ${cp1y}, 70 ${cp2y}, 100 ${y2}`}
+                stroke="rgba(255,255,255,0.4)"
+                strokeWidth={0.5}
+                fill="none"
+                strokeLinecap="round"
+                className="opacity-60"
             />
             {/* Solder Points / Terminals */}
-            <circle cx="1" cy={y1} r="1.2" fill="#fbbf24" opacity="0.9" />
-            <circle cx="99" cy={y2} r="1.2" fill="#fbbf24" opacity="0.9" />
+            <circle cx="1.5" cy={y1} r="1.8" fill="#d97706" stroke="#78350f" strokeWidth="0.5" />
+            <circle cx="98.5" cy={y2} r="1.8" fill="#d97706" stroke="#78350f" strokeWidth="0.5" />
         </g>
     );
   }
 
   return (
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-b-lg">
           {/* Dark inner housing background */}
-          <div className="absolute inset-0 bg-[#18120e]"></div>
+          <div className="absolute inset-0 bg-[#1a120b] shadow-[inset_0_0_10px_rgba(0,0,0,1)]"></div>
           
+          {/* Cross-hatch texture for insulation board */}
+          <div className="absolute inset-0 opacity-10 bg-[repeating-linear-gradient(45deg,#000,#000_1px,transparent_1px,transparent_3px)]"></div>
+
           <svg className="w-full h-full relative z-10" preserveAspectRatio="none" viewBox="0 0 100 100">
               {wires}
           </svg>
           
-          {/* Shine overlay / Glassy reflection/shadow on the wiring housing */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-black/70 z-20"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50 z-20"></div>
+          {/* Glassy reflection/shadow on the wiring housing */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 z-20 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-20 pointer-events-none"></div>
       </div>
   )
 }
@@ -121,57 +129,66 @@ const RotorUnitInternal: React.FC<{
       <div className="relative w-20 sm:w-24 h-52 perspective-1000 z-10">
           
           {/* Background Shaft Segment (passes through) */}
-          <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-3 bg-gradient-to-r from-zinc-800 via-zinc-400 to-zinc-800 -z-20 shadow-inner rounded-full"></div>
+          <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-4 bg-gradient-to-r from-zinc-800 via-zinc-400 to-zinc-800 -z-20 shadow-inner rounded-sm"></div>
 
           {/* THE ROTOR BODY */}
-          <div className="w-full h-full relative flex items-center justify-center transition-transform hover:scale-105 duration-300">
+          <div className="w-full h-full relative flex items-center justify-center transition-transform hover:scale-105 duration-300 origin-center">
                
-               {/* LEFT: Spring Contacts Plate */}
-               <div className="absolute left-1 top-6 bottom-6 w-2 z-20 flex flex-col justify-center gap-2">
-                   {/* Pins - Representative visual of the 26 pins */}
-                   {[...Array(8)].map((_, i) => (
-                       <div key={i} className="relative h-1 w-3 -ml-1">
-                           <div className="absolute right-0 w-2 h-1 bg-yellow-500 rounded-l-full shadow-sm"></div>
-                           <div className="absolute right-2 w-2 h-[1px] bg-yellow-600 top-1/2 -translate-y-1/2 opacity-80"></div> {/* Spring wire */}
+               {/* LEFT: Spring Contacts Plate (Spring-loaded pins) */}
+               <div className="absolute -left-1.5 top-8 bottom-8 w-3 z-20 flex flex-col justify-between py-1">
+                   {/* Dense array of pins to simulate 26 contacts */}
+                   {[...Array(18)].map((_, i) => (
+                       <div key={i} className="relative w-full h-[2px] flex items-center">
+                           <div className="absolute right-0 w-3 h-1 bg-gradient-to-l from-yellow-500 to-yellow-700 rounded-l-full shadow-[0_1px_1px_rgba(0,0,0,0.5)]"></div> 
+                           <div className="absolute right-0.5 w-px h-px bg-white/50"></div>
                        </div>
                    ))}
                </div>
 
                {/* CENTER: Main Drum */}
-               <div className="relative w-full h-44 bg-[#18100c] rounded-lg overflow-hidden shadow-[5px_0_20px_rgba(0,0,0,0.8)] border-y border-black/80 flex flex-col">
+               <div className="relative w-full h-44 bg-[#18100c] rounded-lg overflow-hidden shadow-[5px_0_25px_rgba(0,0,0,0.9)] border-y border-black/80 flex flex-col">
                     
-                    {/* Global lighting sheen */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80 pointer-events-none z-30"></div>
-                    <div className="absolute left-1/3 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none z-30"></div>
+                    {/* Bakelite Texture Overlay */}
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-30 mix-blend-overlay pointer-events-none z-30"></div>
+
+                    {/* Lighting/Sheen */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-white/5 to-black/80 pointer-events-none z-40"></div>
+                    <div className="absolute left-1/4 top-0 bottom-0 w-12 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 pointer-events-none z-40 blur-sm"></div>
 
                     {/* TOP: Thumbwheel (Knurled) */}
-                    <div className="h-[35%] bg-zinc-800 relative border-b border-black shadow-lg z-10">
+                    <div className="h-[32%] bg-zinc-800 relative border-b border-black shadow-lg z-10">
                          {/* Knurling texture */}
                          <div className={`absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,#000_2px,#000_4px)] opacity-50 mix-blend-multiply ${spinAnim}`}></div>
                          <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
+                         {/* Edge Highlight */}
+                         <div className="absolute top-0 inset-x-0 h-[1px] bg-white/20"></div>
                     </div>
 
                     {/* MIDDLE: Alphabet Ring (The Ringstellung) */}
-                    <div className="h-[30%] bg-[#e6e6d8] relative flex items-center justify-center border-y border-zinc-600 z-20 shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]">
-                        {/* Material texture */}
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-60"></div>
+                    <div className="h-[28%] bg-[#e6e6d8] relative flex items-center justify-center border-y border-zinc-600 z-20 shadow-[inset_0_0_15px_rgba(0,0,0,0.6)] overflow-hidden">
+                        {/* Material texture (Ivory/Paper) */}
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-80"></div>
+                        
+                        {/* Notch Visual (Contextual to ring) */}
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-2 bg-zinc-400/50 rounded-l-sm blur-[1px]"></div>
+
                         {/* Characters */}
-                        <div className={`flex flex-col items-center transition-transform duration-150 ${spinAnim}`}>
-                             <span className="text-[9px] font-mono font-bold text-zinc-400/80 scale-y-75 blur-[0.5px]">{getCharOffset(-1)}</span>
-                             <span className="text-2xl font-mono font-bold text-zinc-900 my-0.5 scale-x-110 drop-shadow-[0_1px_0_rgba(255,255,255,0.5)]">{position}</span>
-                             <span className="text-[9px] font-mono font-bold text-zinc-400/80 scale-y-75 blur-[0.5px]">{getCharOffset(1)}</span>
+                        <div className={`flex flex-col items-center transition-transform duration-150 ${spinAnim} relative z-10`}>
+                             <span className="text-[8px] font-mono font-bold text-zinc-500/70 scale-y-75 blur-[0.5px]">{getCharOffset(-1)}</span>
+                             <span className="text-2xl font-mono font-bold text-[#222] my-0.5 scale-x-110 drop-shadow-[0_1px_0_rgba(255,255,255,0.8)]">{position}</span>
+                             <span className="text-[8px] font-mono font-bold text-zinc-500/70 scale-y-75 blur-[0.5px]">{getCharOffset(1)}</span>
                         </div>
                     </div>
 
                     {/* BOTTOM: Core Wiring Housing */}
-                    <div className="h-[35%] bg-[#2a1d15] relative border-t border-black shadow-inner z-10 flex flex-col items-center justify-end pb-2 overflow-hidden">
+                    <div className="h-[40%] bg-[#2a1d15] relative border-t border-black shadow-inner z-10 flex flex-col items-center justify-end pb-2 overflow-hidden">
                          
                          {/* WIRING VISUALIZATION */}
                          <WiringVisual rotorType={rotorType} />
 
-                         {/* Rotor Type Label Plate */}
-                         <div className="z-20 px-2 py-0.5 bg-black/80 rounded border border-amber-500/30 backdrop-blur-[1px] mb-2 shadow-lg">
-                            <span className={`text-[10px] font-serif font-bold tracking-widest ${isGreek ? 'text-blue-400' : 'text-amber-500'}`}>
+                         {/* Rotor Type Label Plate (Brass) */}
+                         <div className="z-30 px-2 py-0.5 bg-gradient-to-b from-yellow-600 to-yellow-800 rounded border border-yellow-900/50 shadow-lg mb-1.5">
+                            <span className={`text-[9px] font-serif font-bold tracking-widest drop-shadow-sm ${isGreek ? 'text-blue-100' : 'text-yellow-100'}`}>
                                 {rotorType}
                             </span>
                          </div>
@@ -179,31 +196,33 @@ const RotorUnitInternal: React.FC<{
                </div>
 
                {/* RIGHT: Flat Contact Plate */}
-               <div className="absolute right-1 top-6 bottom-6 w-1.5 bg-[#5c3a21] border-l border-black/50 z-20 flex flex-col justify-center gap-2">
-                    {/* Flat pads visual */}
-                    {[...Array(8)].map((_, i) => (
-                        <div key={i} className="w-1 h-1 bg-yellow-700/50 mx-auto rounded-full"></div>
+               <div className="absolute right-0 top-8 bottom-8 w-1.5 z-20 flex flex-col justify-between py-1 pl-0.5">
+                    {/* Flat brass pads */}
+                    {[...Array(18)].map((_, i) => (
+                        <div key={i} className="w-1 h-[2px] bg-yellow-700/80 rounded-full shadow-sm"></div>
                     ))}
                </div>
 
           </div>
 
-          {/* Mechanical Ratchet / Pawl visual */}
-          <div className="absolute -right-1 bottom-8 w-2 h-6 bg-gradient-to-b from-zinc-500 to-zinc-700 rounded-l border border-zinc-600 z-0 shadow-lg"></div>
+          {/* Mechanical Ratchet / Pawl visual (Bottom Right) */}
+          <div className="absolute -right-2 bottom-6 w-3 h-8 bg-gradient-to-r from-zinc-600 to-zinc-500 rounded-l border border-zinc-700 z-0 shadow-xl transform -skew-y-12 origin-bottom-right">
+             <div className="absolute top-1 right-1 w-1 h-1 bg-black/30 rounded-full"></div>
+          </div>
       </div>
 
       {/* Manual Interaction Buttons */}
-      <div className="flex flex-col gap-1 mt-2 w-full max-w-[4rem]">
+      <div className="flex flex-col gap-1 mt-3 w-full max-w-[4rem]">
            <button 
               onClick={onPrev}
-              className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-t border border-white/5 py-1 flex justify-center shadow-lg active:translate-y-0.5 transition-all"
+              className="w-full bg-gradient-to-b from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-zinc-400 hover:text-white rounded-t border border-white/10 py-1 flex justify-center shadow-lg active:translate-y-0.5 transition-all"
               title="Step Up"
             >
                 <ChevronUp size={12} />
             </button>
             <button 
               onClick={onNext}
-              className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-b border-x border-b border-white/5 py-1 flex justify-center shadow-lg active:translate-y-0.5 transition-all"
+              className="w-full bg-gradient-to-b from-zinc-800 to-zinc-900 hover:from-zinc-700 hover:to-zinc-800 text-zinc-400 hover:text-white rounded-b border-x border-b border-white/10 py-1 flex justify-center shadow-lg active:translate-y-0.5 transition-all"
               title="Step Down"
             >
                 <ChevronDown size={12} />
@@ -341,18 +360,19 @@ const RotorPanel: React.FC<Props> = ({ settings, onUpdate, onOpenSettings, isCov
         <div className="relative z-10 flex flex-col items-center">
             
             {/* Top Shaft Bar */}
-            <div className="w-[95%] h-2 bg-zinc-800 rounded-full mb-4 shadow-[0_2px_5px_black] relative">
+            <div className="w-[95%] h-3 bg-gradient-to-b from-zinc-700 to-zinc-900 rounded-full mb-4 shadow-[0_2px_5px_black] relative border border-zinc-800">
                  <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent rounded-full"></div>
             </div>
 
             <div className="flex items-start justify-center gap-1 sm:gap-2">
-                {/* Reflector Block (Static on left usually) */}
-                <div className="w-10 sm:w-12 h-40 bg-zinc-800 rounded-l-lg shadow-2xl border-y border-l border-zinc-700 relative flex flex-col items-center justify-center mr-2 mt-6">
+                {/* Reflector Block (Static on left) */}
+                <div className="w-10 sm:w-12 h-44 bg-zinc-800 rounded-l-lg shadow-2xl border-y border-l border-zinc-700 relative flex flex-col items-center justify-center mr-2 mt-2 overflow-hidden">
+                     <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent"></div>
                      <div className="absolute right-0 top-2 bottom-2 w-1 bg-black/50"></div>
-                     <span className="text-[10px] font-mono font-bold text-zinc-500 -rotate-90 whitespace-nowrap">UKW {settings.reflector}</span>
+                     <span className="text-[10px] font-mono font-bold text-zinc-500 -rotate-90 whitespace-nowrap z-10">UKW {settings.reflector}</span>
                      {/* Screws */}
-                     <div className="absolute top-2 left-2 w-1.5 h-1.5 bg-zinc-900 rounded-full"></div>
-                     <div className="absolute bottom-2 left-2 w-1.5 h-1.5 bg-zinc-900 rounded-full"></div>
+                     <div className="absolute top-3 left-3 w-1.5 h-1.5 bg-zinc-900 rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"></div>
+                     <div className="absolute bottom-3 left-3 w-1.5 h-1.5 bg-zinc-900 rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"></div>
                 </div>
 
                 {/* The Rotors */}
@@ -360,4 +380,48 @@ const RotorPanel: React.FC<Props> = ({ settings, onUpdate, onOpenSettings, isCov
                     <RotorUnitInternal
                         key={idx}
                         label={getLabel(idx, settings.rotors.length)}
-                        position={settings.positions
+                        position={settings.positions[idx]}
+                        rotorType={rotor}
+                        isGreek={settings.rotors.length === 4 && idx === 0}
+                        onNext={() => rotate(idx, 1)}
+                        onPrev={() => rotate(idx, -1)}
+                    />
+                ))}
+
+                {/* Entry Wheel Block (Right) */}
+                 <div className="w-6 sm:w-8 h-44 bg-zinc-800 rounded-r-lg shadow-2xl border-y border-r border-zinc-700 relative flex flex-col items-center justify-center ml-2 opacity-80 mt-2 overflow-hidden">
+                     <div className="absolute left-0 top-2 bottom-2 w-1 bg-black/50"></div>
+                     <div className="w-full h-full bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,#000_2px,#000_3px)] opacity-30"></div>
+                     {/* Axle End */}
+                     <div className="w-4 h-4 bg-zinc-600 rounded-full shadow-inner border border-black/50 relative">
+                         <div className="absolute inset-1 bg-black/50 rounded-full"></div>
+                     </div>
+                </div>
+            </div>
+            
+            {/* Configuration Button (Integrated as a mechanical plate) */}
+            <div className="mt-8 w-full flex justify-center">
+                <button 
+                    onClick={onOpenSettings}
+                    className="group relative px-8 py-2 bg-[#1a1a1a] border border-zinc-700 rounded shadow-[0_5px_15px_black] active:scale-95 transition-all overflow-hidden"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+                    <div className="flex items-center gap-3 text-amber-600 font-mono font-bold text-xs tracking-wider z-10 relative group-hover:text-amber-500 transition-colors">
+                        <Settings size={14} className="group-hover:rotate-90 transition-transform duration-500" />
+                        <span>CONFIGURE MECHANISM</span>
+                    </div>
+                    {/* Screw heads on button */}
+                    <div className="absolute top-1 left-1 w-1 h-1 bg-zinc-500 rounded-full opacity-50 shadow-sm"></div>
+                    <div className="absolute top-1 right-1 w-1 h-1 bg-zinc-500 rounded-full opacity-50 shadow-sm"></div>
+                    <div className="absolute bottom-1 left-1 w-1 h-1 bg-zinc-500 rounded-full opacity-50 shadow-sm"></div>
+                    <div className="absolute bottom-1 right-1 w-1 h-1 bg-zinc-500 rounded-full opacity-50 shadow-sm"></div>
+                </button>
+            </div>
+
+        </div>
+    </div>
+  );
+};
+
+export default RotorPanel;
