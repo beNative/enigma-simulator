@@ -53,87 +53,96 @@ const RotorUnitInternal: React.FC<{
       </div>
 
       {/* The Rotor Cylinder Assembly */}
-      <div className="relative w-16 sm:w-20 h-48 perspective-1000 z-10">
+      <div className="relative w-20 sm:w-24 h-52 perspective-1000 z-10">
           
           {/* Background Shaft Segment (passes through) */}
-          <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-4 bg-gradient-to-r from-zinc-800 via-zinc-400 to-zinc-800 -z-20 shadow-inner"></div>
+          <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-3 bg-gradient-to-r from-zinc-800 via-zinc-400 to-zinc-800 -z-20 shadow-inner rounded-full"></div>
 
           {/* THE ROTOR BODY */}
-          <div className="w-full h-full rounded-lg relative flex flex-col shadow-[10px_0_20px_rgba(0,0,0,0.8)] transition-transform hover:scale-105">
+          <div className="w-full h-full relative flex items-center justify-center transition-transform hover:scale-105 duration-300">
                
-               {/* Cylinder Shape Mask */}
-               <div className="absolute inset-0 overflow-hidden rounded-lg bg-[#1a1a1a] border-x border-black/50">
-                    
-                    {/* Lighting / Material Shine */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-transparent to-black/90 pointer-events-none z-20"></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none z-20"></div>
-
-                    {/* --- COMPONENT: Left Contact Plate (Springs) --- */}
-                    {/* Represented as top/left edge details visually */}
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#b8860b] border-r border-black/60 z-10 flex flex-col justify-center gap-3 opacity-80">
-                        {[...Array(5)].map((_, i) => <div key={i} className="w-1 h-1 bg-yellow-200 rounded-full mx-auto shadow-sm"></div>)}
-                    </div>
-
-                    {/* --- COMPONENT: Main Body (Bakelite) --- */}
-                    <div className="absolute inset-y-0 left-1.5 right-1.5 bg-[#18100c]">
-                         {/* Texture */}
-                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-30 mix-blend-overlay"></div>
-
-                         {/* ENGRAVING */}
-                         <div className="absolute top-4 w-full text-center z-10">
-                            <div className="inline-block border border-amber-500/30 rounded px-1 bg-black/40 backdrop-blur-sm">
-                                <span className={`text-[10px] font-serif font-bold tracking-widest ${isGreek ? 'text-blue-300' : 'text-amber-500'}`}>
-                                    {rotorType}
-                                </span>
-                            </div>
-                         </div>
-
-                         {/* --- COMPONENT: Thumbwheel --- */}
-                         <div className="absolute top-14 w-full h-12 bg-zinc-800 shadow-[0_0_10px_black] border-y border-black">
-                              {/* Knurling Animation Layer */}
-                              <div className={`w-full h-full opacity-70 bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,#000_2px,#000_4px)] ${spinAnim}`}></div>
-                              {/* Metallic Sheen */}
-                              <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black opacity-80"></div>
-                         </div>
-
-                         {/* --- COMPONENT: Alphabet Ring --- */}
-                         <div className="absolute bottom-6 w-full h-12 bg-[#e8e8e8] shadow-md flex flex-col items-center justify-center overflow-hidden border-y border-zinc-500">
-                              {/* Paper Texture */}
-                              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-50"></div>
-                              
-                              {/* Visible Chars */}
-                              <div className={`flex flex-col items-center transition-transform duration-150 ${spinAnim}`}>
-                                   <span className="text-[8px] font-mono font-bold text-zinc-400 scale-y-75 blur-[0.5px]">{getCharOffset(-1)}</span>
-                                   <span className="text-xl font-mono font-bold text-zinc-900 my-0.5 scale-x-110">{position}</span>
-                                   <span className="text-[8px] font-mono font-bold text-zinc-400 scale-y-75 blur-[0.5px]">{getCharOffset(1)}</span>
-                              </div>
-                         </div>
-                    </div>
-
-                    {/* --- COMPONENT: Right Contact Plate (Flat Pads) --- */}
-                    <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-[#8b4513] border-l border-black/60 z-10"></div>
+               {/* LEFT: Spring Contacts Plate */}
+               <div className="absolute left-1 top-6 bottom-6 w-2 z-20 flex flex-col justify-center gap-2">
+                   {/* Pins - Representative visual of the 26 pins */}
+                   {[...Array(8)].map((_, i) => (
+                       <div key={i} className="relative h-1 w-3 -ml-1">
+                           <div className="absolute right-0 w-2 h-1 bg-yellow-500 rounded-l-full shadow-sm"></div>
+                           <div className="absolute right-2 w-2 h-[1px] bg-yellow-600 top-1/2 -translate-y-1/2 opacity-80"></div> {/* Spring wire */}
+                       </div>
+                   ))}
                </div>
+
+               {/* CENTER: Main Drum */}
+               <div className="relative w-full h-44 bg-[#18100c] rounded-lg overflow-hidden shadow-[5px_0_20px_rgba(0,0,0,0.8)] border-y border-black/80 flex flex-col">
+                    
+                    {/* Global lighting sheen */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80 pointer-events-none z-30"></div>
+                    <div className="absolute left-1/3 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none z-30"></div>
+
+                    {/* TOP: Thumbwheel (Knurled) */}
+                    <div className="h-[35%] bg-zinc-800 relative border-b border-black shadow-lg z-10">
+                         {/* Knurling texture */}
+                         <div className={`absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,#000_2px,#000_4px)] opacity-50 mix-blend-multiply ${spinAnim}`}></div>
+                         <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
+                    </div>
+
+                    {/* MIDDLE: Alphabet Ring (The Ringstellung) */}
+                    <div className="h-[30%] bg-[#e6e6d8] relative flex items-center justify-center border-y border-zinc-600 z-20 shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]">
+                        {/* Material texture */}
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-60"></div>
+                        {/* Characters */}
+                        <div className={`flex flex-col items-center transition-transform duration-150 ${spinAnim}`}>
+                             <span className="text-[9px] font-mono font-bold text-zinc-400/80 scale-y-75 blur-[0.5px]">{getCharOffset(-1)}</span>
+                             <span className="text-2xl font-mono font-bold text-zinc-900 my-0.5 scale-x-110 drop-shadow-[0_1px_0_rgba(255,255,255,0.5)]">{position}</span>
+                             <span className="text-[9px] font-mono font-bold text-zinc-400/80 scale-y-75 blur-[0.5px]">{getCharOffset(1)}</span>
+                        </div>
+                    </div>
+
+                    {/* BOTTOM: Core Wiring Housing */}
+                    <div className="h-[35%] bg-[#2a1d15] relative border-t border-black shadow-inner z-10 flex flex-col items-center justify-end pb-2 overflow-hidden">
+                         {/* Simulated Internal Wires - Crosshatch pattern to suggest mess of wires */}
+                         <div className="absolute inset-0 opacity-10 bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,#d97706_5px,#d97706_6px)]"></div>
+                         <div className="absolute inset-0 opacity-10 bg-[repeating-linear-gradient(-45deg,transparent,transparent_5px,#b45309_5px,#b45309_6px)]"></div>
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+
+                         {/* Rotor Type Label Plate */}
+                         <div className="z-20 px-2 py-0.5 bg-black/60 rounded border border-amber-500/30 backdrop-blur-[1px] mb-2 shadow-lg">
+                            <span className={`text-[10px] font-serif font-bold tracking-widest ${isGreek ? 'text-blue-400' : 'text-amber-500'}`}>
+                                {rotorType}
+                            </span>
+                         </div>
+                    </div>
+               </div>
+
+               {/* RIGHT: Flat Contact Plate */}
+               <div className="absolute right-1 top-6 bottom-6 w-1.5 bg-[#5c3a21] border-l border-black/50 z-20 flex flex-col justify-center gap-2">
+                    {/* Flat pads visual */}
+                    {[...Array(8)].map((_, i) => (
+                        <div key={i} className="w-1 h-1 bg-yellow-700/50 mx-auto rounded-full"></div>
+                    ))}
+               </div>
+
           </div>
 
-          {/* Mechanical Catch / Ratchet Lever (Visual) */}
-          <div className="absolute -right-1 bottom-10 w-2 h-8 bg-zinc-700 rounded-l-full shadow-lg border border-zinc-600 z-0"></div>
+          {/* Mechanical Ratchet / Pawl visual */}
+          <div className="absolute -right-1 bottom-8 w-2 h-6 bg-gradient-to-b from-zinc-500 to-zinc-700 rounded-l border border-zinc-600 z-0 shadow-lg"></div>
       </div>
 
       {/* Manual Interaction Buttons */}
-      <div className="flex flex-col gap-1 mt-3">
+      <div className="flex flex-col gap-1 mt-2 w-full max-w-[4rem]">
            <button 
               onClick={onPrev}
-              className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-t border-x border-t border-white/5 py-1 flex justify-center shadow-lg active:translate-y-0.5 transition-all"
+              className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-t border border-white/5 py-1 flex justify-center shadow-lg active:translate-y-0.5 transition-all"
               title="Step Up"
             >
-                <ChevronUp size={14} />
+                <ChevronUp size={12} />
             </button>
             <button 
               onClick={onNext}
               className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-b border-x border-b border-white/5 py-1 flex justify-center shadow-lg active:translate-y-0.5 transition-all"
               title="Step Down"
             >
-                <ChevronDown size={14} />
+                <ChevronDown size={12} />
             </button>
       </div>
 
@@ -274,7 +283,7 @@ const RotorPanel: React.FC<Props> = ({ settings, onUpdate, onOpenSettings, isCov
 
             <div className="flex items-start justify-center gap-1 sm:gap-2">
                 {/* Reflector Block (Static on left usually) */}
-                <div className="w-10 sm:w-12 h-40 bg-zinc-800 rounded-l-lg shadow-2xl border-y border-l border-zinc-700 relative flex flex-col items-center justify-center mr-2">
+                <div className="w-10 sm:w-12 h-40 bg-zinc-800 rounded-l-lg shadow-2xl border-y border-l border-zinc-700 relative flex flex-col items-center justify-center mr-2 mt-6">
                      <div className="absolute right-0 top-2 bottom-2 w-1 bg-black/50"></div>
                      <span className="text-[10px] font-mono font-bold text-zinc-500 -rotate-90 whitespace-nowrap">UKW {settings.reflector}</span>
                      {/* Screws */}
@@ -296,7 +305,7 @@ const RotorPanel: React.FC<Props> = ({ settings, onUpdate, onOpenSettings, isCov
                 ))}
 
                 {/* Entry Wheel Block (Right) */}
-                 <div className="w-6 sm:w-8 h-40 bg-zinc-800 rounded-r-lg shadow-2xl border-y border-r border-zinc-700 relative flex flex-col items-center justify-center ml-2 opacity-80">
+                 <div className="w-6 sm:w-8 h-40 bg-zinc-800 rounded-r-lg shadow-2xl border-y border-r border-zinc-700 relative flex flex-col items-center justify-center ml-2 opacity-80 mt-6">
                      <div className="absolute left-0 top-2 bottom-2 w-1 bg-black/50"></div>
                      <div className="w-full h-full bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,#000_2px,#000_3px)] opacity-30"></div>
                 </div>
