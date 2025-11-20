@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Enigma Simulator Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;600;800&family=Cinzel:wght@700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
@@ -13,6 +13,7 @@
             fontFamily: {
               mono: ['"Special Elite"', 'monospace'],
               sans: ['"Inter"', 'sans-serif'],
+              serif: ['"Cinzel"', 'serif'],
             },
             colors: {
               enigma: {
@@ -36,6 +37,14 @@
                 '0%': { transform: 'translateY(-100%)', opacity: '0.5', filter: 'blur(2px)' },
                 '100%': { transform: 'translateY(0)', opacity: '1', filter: 'blur(0)' },
               },
+              'knurl-up': {
+                '0%': { transform: 'translateY(0)' },
+                '100%': { transform: 'translateY(-4px)' },
+              },
+              'knurl-down': {
+                '0%': { transform: 'translateY(0)' },
+                '100%': { transform: 'translateY(4px)' },
+              },
               'fadeIn': {
                 '0%': { opacity: '0' },
                 '100%': { opacity: '1' },
@@ -48,6 +57,8 @@
             animation: {
               'rotor-slide-up': 'rotor-slide-up 0.15s ease-out forwards',
               'rotor-slide-down': 'rotor-slide-down 0.15s ease-out forwards',
+              'knurl-up': 'knurl-up 0.2s ease-out',
+              'knurl-down': 'knurl-down 0.2s ease-out',
               'fadeIn': 'fadeIn 0.3s ease-out forwards',
               'slideIn': 'slideIn 0.4s ease-out forwards',
             }
@@ -60,11 +71,48 @@
         background-color: #121212;
         color: #e0e0e0;
       }
-      /* Wood texture overlay for a vintage feel */
+      
+      /* --- HISTORICAL TEXTURES --- */
+      
+      /* Standard Oak Wood */
       .wood-texture {
         background-color: #2c241b;
         background-image: url("https://www.transparenttextures.com/patterns/wood-pattern.png");
       }
+
+      /* Dark Mahogany (Commercial) */
+      .mahogany-texture {
+        background-color: #1a0f0a;
+        background-image: url("https://www.transparenttextures.com/patterns/wood-pattern.png");
+      }
+      
+      /* Painted Wood (Norway/Field) */
+      .painted-texture {
+        background-color: #2a332a; /* Dark green/grey */
+        background-image: url("https://www.transparenttextures.com/patterns/purty-wood.png");
+      }
+
+      /* Black Crackle Finish (Wehrmacht Standard) */
+      .crackle-texture {
+        background-color: #1a1a1a;
+        background-image: url("https://www.transparenttextures.com/patterns/asfalt-dark.png");
+        background-size: 200px;
+      }
+
+      /* Hammer-tone Finish (Norway/Naval refits) */
+      .hammertone-texture {
+        background-color: #2f353b;
+        background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 20%),
+                          url("https://www.transparenttextures.com/patterns/black-scales.png");
+        background-size: 20px 20px, 100px 100px;
+      }
+
+      /* Smooth Lacquer (Swiss/Commercial) */
+      .smooth-texture {
+        background-color: #151515;
+        background-image: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+      }
+
       /* Paper texture for tapes */
       .paper-texture {
          background-color: #f0f0f0;
