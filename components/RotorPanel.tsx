@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { EnigmaSettings } from '../types';
 import { Settings, ChevronUp, ChevronDown } from 'lucide-react';
@@ -8,6 +9,70 @@ interface Props {
   onOpenSettings: () => void;
   isCoverOpen: boolean;
   variant?: 'military' | 'commercial';
+}
+
+// Visual component to simulate the internal cross-wiring of a rotor
+const WiringVisual: React.FC<{ rotorType: string }> = ({ rotorType }) => {
+  // Create a stable visual based on the rotor name so it doesn't jitter on re-render
+  // but looks different for different rotors
+  const seed = rotorType.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  const wires = [];
+  const numWires = 26; // Full alphabet density for realism
+  
+  for (let i = 0; i < numWires; i++) {
+    // Distribute start points evenly
+    const y1 = 5 + (i / numWires) * 90;
+    
+    // Pseudo-random end points based on seed to simulate permutation
+    // Deterministic random based on seed + i
+    const rand = (Math.sin(seed * (i + 1) * 13.37) + 1) / 2; // 0..1
+    const y2 = 5 + (rand * 90); 
+    
+    // Colors: Copper, Oxide Copper, Bright Brass, Bronze
+    const colors = ['#f59e0b', '#d97706', '#b45309', '#92400e', '#fdba74']; 
+    // Pick color based on randomness
+    const colorIndex = Math.floor((Math.sin(seed + i) + 1) * 2.5) % colors.length;
+    const color = colors[colorIndex];
+    
+    // Control points for Bezier curves to make them look like tangible wires crossing over
+    // We vary the Y control points to create 'arching' effects for wires travelling far distances
+    const dist = Math.abs(y2 - y1);
+    const arch = dist * 0.6;
+    const cp1y = y1 + (y2 > y1 ? arch : -arch);
+    const cp2y = y2 - (y2 > y1 ? arch : -arch);
+
+    wires.push(
+        <g key={i}>
+            <path 
+                d={`M 0 ${y1} C 35 ${cp1y}, 65 ${cp2y}, 100 ${y2}`}
+                stroke={color}
+                strokeWidth={0.8}
+                fill="none"
+                opacity={0.9}
+                className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]"
+            />
+            {/* Solder Points / Terminals */}
+            <circle cx="1" cy={y1} r="1.2" fill="#fbbf24" opacity="0.9" />
+            <circle cx="99" cy={y2} r="1.2" fill="#fbbf24" opacity="0.9" />
+        </g>
+    );
+  }
+
+  return (
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+          {/* Dark inner housing background */}
+          <div className="absolute inset-0 bg-[#18120e]"></div>
+          
+          <svg className="w-full h-full relative z-10" preserveAspectRatio="none" viewBox="0 0 100 100">
+              {wires}
+          </svg>
+          
+          {/* Shine overlay / Glassy reflection/shadow on the wiring housing */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-black/70 z-20"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50 z-20"></div>
+      </div>
+  )
 }
 
 const RotorUnitInternal: React.FC<{
@@ -100,13 +165,12 @@ const RotorUnitInternal: React.FC<{
 
                     {/* BOTTOM: Core Wiring Housing */}
                     <div className="h-[35%] bg-[#2a1d15] relative border-t border-black shadow-inner z-10 flex flex-col items-center justify-end pb-2 overflow-hidden">
-                         {/* Simulated Internal Wires - Crosshatch pattern to suggest mess of wires */}
-                         <div className="absolute inset-0 opacity-10 bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,#d97706_5px,#d97706_6px)]"></div>
-                         <div className="absolute inset-0 opacity-10 bg-[repeating-linear-gradient(-45deg,transparent,transparent_5px,#b45309_5px,#b45309_6px)]"></div>
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                         
+                         {/* WIRING VISUALIZATION */}
+                         <WiringVisual rotorType={rotorType} />
 
                          {/* Rotor Type Label Plate */}
-                         <div className="z-20 px-2 py-0.5 bg-black/60 rounded border border-amber-500/30 backdrop-blur-[1px] mb-2 shadow-lg">
+                         <div className="z-20 px-2 py-0.5 bg-black/80 rounded border border-amber-500/30 backdrop-blur-[1px] mb-2 shadow-lg">
                             <span className={`text-[10px] font-serif font-bold tracking-widest ${isGreek ? 'text-blue-400' : 'text-amber-500'}`}>
                                 {rotorType}
                             </span>
@@ -296,43 +360,4 @@ const RotorPanel: React.FC<Props> = ({ settings, onUpdate, onOpenSettings, isCov
                     <RotorUnitInternal
                         key={idx}
                         label={getLabel(idx, settings.rotors.length)}
-                        position={settings.positions[idx]}
-                        rotorType={rotor}
-                        isGreek={settings.rotors.length === 4 && idx === 0}
-                        onNext={() => rotate(idx, 1)}
-                        onPrev={() => rotate(idx, -1)}
-                    />
-                ))}
-
-                {/* Entry Wheel Block (Right) */}
-                 <div className="w-6 sm:w-8 h-40 bg-zinc-800 rounded-r-lg shadow-2xl border-y border-r border-zinc-700 relative flex flex-col items-center justify-center ml-2 opacity-80 mt-6">
-                     <div className="absolute left-0 top-2 bottom-2 w-1 bg-black/50"></div>
-                     <div className="w-full h-full bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,#000_2px,#000_3px)] opacity-30"></div>
-                </div>
-            </div>
-            
-            {/* Configuration Button (Integrated as a mechanical plate) */}
-            <div className="mt-8 w-full flex justify-center">
-                <button 
-                    onClick={onOpenSettings}
-                    className="group relative px-8 py-2 bg-zinc-800 border border-zinc-600 rounded shadow-[0_5px_15px_black] active:scale-95 transition-all overflow-hidden"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
-                    <div className="flex items-center gap-3 text-amber-500 font-mono font-bold text-xs tracking-wider z-10 relative">
-                        <Settings size={14} className="group-hover:rotate-90 transition-transform duration-500" />
-                        <span>CONFIGURE MECHANISM</span>
-                    </div>
-                    {/* Screw heads on button */}
-                    <div className="absolute top-1 left-1 w-1 h-1 bg-zinc-500 rounded-full opacity-50"></div>
-                    <div className="absolute top-1 right-1 w-1 h-1 bg-zinc-500 rounded-full opacity-50"></div>
-                    <div className="absolute bottom-1 left-1 w-1 h-1 bg-zinc-500 rounded-full opacity-50"></div>
-                    <div className="absolute bottom-1 right-1 w-1 h-1 bg-zinc-500 rounded-full opacity-50"></div>
-                </button>
-            </div>
-
-        </div>
-    </div>
-  );
-};
-
-export default RotorPanel;
+                        position={settings.positions
