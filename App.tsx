@@ -1,65 +1,158 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { EnigmaSettings, Mission } from './types';
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { EnigmaSettings, Mission, EnigmaModel } from './types';
 import { EnigmaMachine } from './utils/enigmaMachine';
 import RotorPanel from './components/RotorPanel';
 import Lampboard from './components/Lampboard';
 import Keyboard from './components/Keyboard';
 import Plugboard from './components/Plugboard';
 import MissionControl from './components/MissionControl';
-import { Eraser, Paperclip, Copy, Settings } from 'lucide-react';
+import { Eraser, Paperclip, Copy, Settings, ChevronDown, Info } from 'lucide-react';
 
-const DEFAULT_SETTINGS: EnigmaSettings = {
-  rotors: ['I', 'II', 'III'],
-  positions: ['A', 'A', 'A'],
-  ringSettings: [0, 0, 0],
-  reflector: 'B',
-  plugboard: {}
+const DEFAULT_STATES: Record<EnigmaModel, EnigmaSettings> = {
+  'I': {
+    model: 'I',
+    rotors: ['I', 'II', 'III'],
+    positions: ['A', 'A', 'A'],
+    ringSettings: [0, 0, 0],
+    reflector: 'B',
+    plugboard: {}
+  },
+  'M3': {
+    model: 'M3',
+    rotors: ['I', 'II', 'III'],
+    positions: ['A', 'A', 'A'],
+    ringSettings: [0, 0, 0],
+    reflector: 'B',
+    plugboard: {}
+  },
+  'M4': {
+    model: 'M4',
+    rotors: ['Beta', 'I', 'II', 'III'],
+    positions: ['A', 'A', 'A', 'A'],
+    ringSettings: [0, 0, 0, 0],
+    reflector: 'B_Thin',
+    plugboard: {}
+  },
+  'Norway': {
+    model: 'Norway',
+    rotors: ['N_I', 'N_II', 'N_III'],
+    positions: ['A', 'A', 'A'],
+    ringSettings: [0, 0, 0],
+    reflector: 'N',
+    plugboard: {}
+  },
+  'SwissK': {
+    model: 'SwissK',
+    rotors: ['K_I', 'K_II', 'K_III'],
+    positions: ['A', 'A', 'A'],
+    ringSettings: [0, 0, 0],
+    reflector: 'K',
+    plugboard: {}
+  },
+  'Railway': {
+    model: 'Railway',
+    rotors: ['R_I', 'R_II', 'R_III'],
+    positions: ['A', 'A', 'A'],
+    ringSettings: [0, 0, 0],
+    reflector: 'R',
+    plugboard: {}
+  }
 };
 
+const MODELS: { id: EnigmaModel; name: string; short: string; description: string }[] = [
+    { 
+      id: 'I', 
+      name: 'Enigma I (Heer/Luftwaffe)', 
+      short: 'ENIGMA I',
+      description: "The standard Wehrmacht machine used by the German Army and Air Force. It features a 3-rotor mechanism (chosen from rotors I-V) and a plugboard, providing 158 quintillion settings."
+    },
+    { 
+      id: 'M3', 
+      name: 'Enigma M3 (Kriegsmarine)', 
+      short: 'ENIGMA M3',
+      description: "The standard German Navy machine. Similar to the Enigma I but with 3 rotors chosen from a larger pool of 8 (I-VIII), increasing security for naval operations."
+    },
+    { 
+      id: 'M4', 
+      name: 'Enigma M4 (U-Boat)', 
+      short: 'ENIGMA M4',
+      description: "The complex 4-rotor variant used exclusively by U-Boats. It introduced a 'Greek' fourth rotor (Beta/Gamma) and thin reflectors to combat Allied code-breaking successes."
+    },
+    { 
+      id: 'Norway', 
+      name: 'Norenigma (Police)', 
+      short: 'NORWAY',
+      description: "A post-war adaptation used by the Norwegian Police Security Service. It utilized surplus German hardware with unique wiring configurations."
+    },
+    { 
+      id: 'SwissK', 
+      name: 'Enigma K (Swiss)', 
+      short: 'SWISS K',
+      description: "A commercial variant (Model K) adopted by the Swiss Army. Unlike military versions, it lacks a plugboard, making it significantly more vulnerable to cryptanalysis."
+    },
+    { 
+      id: 'Railway', 
+      name: 'Enigma R (Railway)', 
+      short: 'RAILWAY',
+      description: "A rare version used by the German Railway (Reichsbahn). It features a rewired reflector and rotors but lacks a plugboard, balancing security with ease of use."
+    },
+];
+
 const App: React.FC = () => {
-  const [settings, setSettings] = useState<EnigmaSettings>(DEFAULT_SETTINGS);
+  const [activeModel, setActiveModel] = useState<EnigmaModel>('I');
+  
+  // Store persistence for all machines
+  const [machineStates, setMachineStates] = useState<Record<EnigmaModel, EnigmaSettings>>(DEFAULT_STATES);
+  
+  const settings = machineStates[activeModel];
+  const machineRef = useRef<EnigmaMachine>(new EnigmaMachine(settings));
+
+  const handleUpdateSettings = (newSettings: EnigmaSettings) => {
+    setMachineStates(prev => ({
+        ...prev,
+        [activeModel]: newSettings
+    }));
+  };
+
   const [litKey, setLitKey] = useState<string | null>(null);
   const [inputTape, setInputTape] = useState<string>("");
   const [outputTape, setOutputTape] = useState<string>("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeMission, setActiveMission] = useState<Mission | null>(null);
   
-  const machineRef = useRef<EnigmaMachine>(new EnigmaMachine(settings));
-
-  // Sync machine instance when settings change (except positions updates caused by typing)
+  // Sync machine instance
   useEffect(() => {
     machineRef.current = new EnigmaMachine(settings);
-  }, [settings.rotors, settings.ringSettings, settings.reflector, settings.plugboard]);
+  }, [settings]);
 
-  // If positions change via UI manually
-  useEffect(() => {
-     machineRef.current = new EnigmaMachine(settings);
-  }, [settings.positions]);
-
-  const handleKeyPress = (char: string) => {
+  const handleKeyPress = useCallback((char: string) => {
     const machine = machineRef.current;
     
-    // 1. Step Rotors
     machine.step();
-    
-    // 2. Encrypt
     const encrypted = machine.encryptChar(char);
     
-    // 3. Update UI State
     setLitKey(encrypted);
     setInputTape(prev => prev + char);
     setOutputTape(prev => prev + encrypted);
     
-    // 4. Update Rotor Positions in React State (for visuals)
-    const newSettings = machine.getSettings();
-    setSettings(prev => ({ ...prev, positions: newSettings.positions }));
-  };
+    // Sync the stepped positions back to React state
+    const newPos = machine.getSettings().positions;
+    
+    setMachineStates(prev => ({
+        ...prev,
+        [activeModel]: {
+            ...prev[activeModel],
+            positions: newPos
+        }
+    }));
 
-  const handleKeyRelease = () => {
+  }, [activeModel]);
+
+  const handleKeyRelease = useCallback(() => {
     setLitKey(null);
-  };
+  }, []);
 
-  // Keyboard listener for physical keyboard
   useEffect(() => {
     const downHandler = (e: KeyboardEvent) => {
       if (e.repeat) return;
@@ -79,7 +172,7 @@ const App: React.FC = () => {
       window.removeEventListener('keydown', downHandler);
       window.removeEventListener('keyup', upHandler);
     };
-  }, [litKey, settings]);
+  }, [litKey, handleKeyPress, handleKeyRelease]);
 
   const clearTapes = () => {
     setInputTape("");
@@ -87,21 +180,54 @@ const App: React.FC = () => {
   };
 
   const handleMissionLoad = (mission: Mission) => {
+    if (activeModel !== 'I') {
+        setActiveModel('I');
+    }
     setActiveMission(mission);
     clearTapes();
-    setSettings(prev => ({...prev, positions: ['A', 'A', 'A']}));
+    
+    // Update Enigma I state
+    setMachineStates(prev => ({
+        ...prev,
+        'I': {
+            ...prev['I'],
+            positions: ['A', 'A', 'A'],
+            ...mission.requiredSettings
+        }
+    }));
   };
+
+  const activeModelInfo = MODELS.find(m => m.id === activeModel) || MODELS[0];
 
   return (
     <div className="h-screen w-full bg-[#121212] text-white font-sans flex flex-col overflow-hidden">
       
       {/* Header Bar */}
-      <header className="h-12 bg-[#0a0a0a] border-b border-white/10 flex items-center justify-between px-4 shrink-0 z-20 shadow-md">
-        <div className="flex items-center gap-4">
-            <h1 className="text-lg font-mono font-bold tracking-widest text-[#e0e0e0]">ENIGMA I</h1>
-            <div className="h-4 w-[1px] bg-white/20"></div>
-            <p className="text-[10px] text-gray-500 font-mono hidden sm:block tracking-widest">WEHRMACHT / HEER & LUFTWAFFE</p>
+      <header className="h-12 bg-[#0a0a0a] border-b border-white/10 flex items-center justify-between px-4 shrink-0 z-20 shadow-md relative">
+        <div className="flex items-center gap-6 h-full">
+            <h1 className="hidden sm:block text-lg font-mono font-bold tracking-widest text-[#e0e0e0]">ENIGMA SIMULATOR</h1>
+            <h1 className="sm:hidden text-lg font-mono font-bold tracking-widest text-[#e0e0e0]">ENIGMA</h1>
+            
+            {/* Model Selector */}
+            <div className="relative group ml-2 sm:ml-4">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors text-xs sm:text-sm font-mono font-bold text-enigma-lit">
+                    <span>{activeModelInfo.name}</span>
+                    <ChevronDown size={14} />
+                </div>
+                <div className="absolute top-full left-0 mt-1 w-64 bg-[#1a1a1a] border border-white/10 rounded shadow-xl overflow-hidden hidden group-hover:block z-50">
+                    {MODELS.map(m => (
+                        <button 
+                            key={m.id}
+                            onClick={() => setActiveModel(m.id)}
+                            className={`w-full text-left px-4 py-3 text-xs font-mono hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 ${activeModel === m.id ? 'text-enigma-lit bg-white/5' : 'text-gray-400'}`}
+                        >
+                            {m.name}
+                        </button>
+                    ))}
+                </div>
+            </div>
         </div>
+        
         <div className="flex items-center gap-4">
             <button 
                 onClick={() => setIsSettingsOpen(true)}
@@ -122,22 +248,21 @@ const App: React.FC = () => {
             {/* The Machine Unit - Responsive Scaling */}
             <div className="relative z-10 flex flex-col items-center transform scale-[0.65] sm:scale-[0.75] md:scale-[0.85] lg:scale-[0.9] xl:scale-100 transition-transform duration-300 origin-center">
                 
-                {/* Rotors sit 'on top' of the box */}
                 <div className="mb-3 relative z-20 w-full flex justify-center">
                     <RotorPanel 
                         settings={settings} 
-                        onUpdate={setSettings} 
+                        onUpdate={handleUpdateSettings} 
                         onOpenSettings={() => setIsSettingsOpen(true)}
                     />
                 </div>
 
                 {/* Main Box */}
-                <div className="bg-[#202020] p-6 pt-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] border-t border-l border-white/10 border-b-8 border-r-4 border-[#111] relative flex flex-col items-center gap-4 w-full max-w-2xl">
+                <div className={`bg-[#202020] p-6 pt-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] border-t border-l border-white/10 border-b-8 border-r-4 relative flex flex-col items-center gap-4 w-full max-w-2xl border-[#111]`}>
                      {/* Metal Plate Effect */}
                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-black/50 rounded-b-lg shadow-white/5"></div>
                      
-                     <div className="absolute top-4 right-6 text-[10px] font-mono text-white/20 tracking-widest">
-                        SERIES B / 1942
+                     <div className="absolute top-4 right-6 text-[10px] font-mono text-white/20 tracking-widest uppercase">
+                        {activeModelInfo.short} / SER-{Math.floor(Math.random() * 10000)}
                      </div>
 
                      <Lampboard litKey={litKey} />
@@ -151,9 +276,8 @@ const App: React.FC = () => {
                         pressedKey={litKey ? inputTape[inputTape.length - 1] : null}
                     />
 
-                    {/* Logo/Plate */}
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] text-white/10 font-sans tracking-[0.3em]">
-                        BERLIN
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] text-white/10 font-sans tracking-[0.3em] uppercase">
+                        {activeModel === 'M4' ? 'KIEL' : activeModel === 'SwissK' ? 'BERN' : activeModel === 'Norway' ? 'OSLO' : 'BERLIN'}
                     </div>
                 </div>
             </div>
@@ -162,7 +286,7 @@ const App: React.FC = () => {
         {/* RIGHT: Operations Sidebar */}
         <aside className="w-80 bg-[#111] border-l border-white/10 flex flex-col shrink-0 z-10 shadow-2xl">
             
-            {/* Tapes Section - Fixed at top of sidebar */}
+            {/* Tapes Section */}
             <div className="p-4 bg-[#161616] border-b border-white/5 shadow-lg relative z-10">
                 <div className="flex justify-between items-end mb-2">
                      <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
@@ -195,16 +319,31 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* Scrollable Content Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
                 
                 {/* Mission Control */}
                 <section>
                     <MissionControl onLoadMission={handleMissionLoad} />
+                    {activeModel !== 'I' && (
+                        <p className="text-[9px] text-gray-600 mt-2 text-center italic">
+                            Note: Loading a mission will switch the machine to standard Enigma I.
+                        </p>
+                    )}
                 </section>
 
-                {/* Active Mission Dossier */}
-                {activeMission && (
+                {/* Model Description Box */}
+                <section>
+                    <div className="bg-[#1a1a1a] p-3 rounded border border-white/5 shadow-inner">
+                        <h3 className="text-[10px] font-bold text-gray-500 uppercase mb-2 tracking-wider flex items-center gap-2">
+                            <Info size={12} /> Technical Specs
+                        </h3>
+                        <div className="text-xs text-gray-300 leading-relaxed font-mono opacity-90">
+                            {activeModelInfo.description}
+                        </div>
+                    </div>
+                </section>
+
+                {activeMission && activeModel === 'I' && (
                     <section className="animate-slideIn">
                         <div className="bg-[#1a1a1a] border border-yellow-600/30 rounded-lg overflow-hidden relative">
                              <div className="absolute -top-2 right-3 text-gray-500 opacity-50">
@@ -227,22 +366,15 @@ const App: React.FC = () => {
                                         {activeMission.targetText}
                                     </div>
                                 </div>
-
-                                {activeMission.requiredSettings && (
-                                     <div className="p-2 bg-blue-900/10 border border-blue-500/20 rounded text-[9px] text-blue-300 font-mono leading-tight">
-                                        <strong>CONFIG:</strong> {JSON.stringify(activeMission.requiredSettings).replace(/[{"}]/g, '').replace(/,/g, ', ')}
-                                     </div>
-                                )}
                             </div>
                         </div>
                     </section>
                 )}
                 
-                {/* Footer */}
                 <div className="mt-auto pt-4 border-t border-white/5">
                     <div className="text-[9px] text-gray-600 font-mono leading-relaxed text-center">
                         <p className="mb-1">Type to encrypt.</p>
-                        <p>Simulator V2.0</p>
+                        <p>Simulator V2.3</p>
                     </div>
                 </div>
             </div>
@@ -253,7 +385,7 @@ const App: React.FC = () => {
 
       <Plugboard 
         settings={settings}
-        onUpdate={setSettings}
+        onUpdate={handleUpdateSettings}
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
       />

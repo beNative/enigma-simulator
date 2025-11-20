@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { generateDailyMission, getHistoricalFact } from '../services/aiService';
 import { Mission } from '../types';

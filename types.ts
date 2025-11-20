@@ -1,7 +1,8 @@
+
 export interface RotorDef {
   name: string;
   wiring: string;
-  notch: string; // Turnover notch position (letter)
+  notch: string; // Turnover notch position (letter), empty if none
 }
 
 export interface ReflectorDef {
@@ -9,11 +10,14 @@ export interface ReflectorDef {
   wiring: string;
 }
 
+export type EnigmaModel = 'I' | 'M3' | 'M4' | 'Norway' | 'SwissK' | 'Railway';
+
 export interface EnigmaSettings {
-  rotors: [string, string, string]; // Left, Middle, Right (e.g., 'I', 'II', 'III')
-  positions: [string, string, string]; // Current visible letter
-  ringSettings: [number, number, number]; // 0-25 (A=0)
-  reflector: string; // 'B' or 'C'
+  model: EnigmaModel;
+  rotors: string[]; // Dynamic length
+  positions: string[]; // Current visible letter
+  ringSettings: number[]; // 0-25 (A=0)
+  reflector: string; 
   plugboard: Record<string, string>; // Map 'A' -> 'Z'
 }
 
