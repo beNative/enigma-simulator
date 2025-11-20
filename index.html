@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enigma Simulator Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              mono: ['"Special Elite"', 'monospace'],
+              sans: ['"Inter"', 'sans-serif'],
+            },
+            colors: {
+              enigma: {
+                dark: '#1a1a1a',
+                panel: '#2d2d2d',
+                key: '#181818',
+                lit: '#ffd700',
+                metal: '#5a5a5a',
+              }
+            },
+            boxShadow: {
+              'glow': '0 0 15px 5px rgba(255, 215, 0, 0.6)',
+              'inner-deep': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.6)',
+            },
+            keyframes: {
+              'rotor-slide-up': {
+                '0%': { transform: 'translateY(100%)', opacity: '0.5', filter: 'blur(2px)' },
+                '100%': { transform: 'translateY(0)', opacity: '1', filter: 'blur(0)' },
+              },
+              'rotor-slide-down': {
+                '0%': { transform: 'translateY(-100%)', opacity: '0.5', filter: 'blur(2px)' },
+                '100%': { transform: 'translateY(0)', opacity: '1', filter: 'blur(0)' },
+              },
+              'fadeIn': {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              'slideIn': {
+                '0%': { transform: 'translateY(10px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              }
+            },
+            animation: {
+              'rotor-slide-up': 'rotor-slide-up 0.15s ease-out forwards',
+              'rotor-slide-down': 'rotor-slide-down 0.15s ease-out forwards',
+              'fadeIn': 'fadeIn 0.3s ease-out forwards',
+              'slideIn': 'slideIn 0.4s ease-out forwards',
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #121212;
+        color: #e0e0e0;
+      }
+      /* Wood texture overlay for a vintage feel */
+      .wood-texture {
+        background-color: #2c241b;
+        background-image: url("https://www.transparenttextures.com/patterns/wood-pattern.png");
+      }
+      /* Paper texture for tapes */
+      .paper-texture {
+         background-color: #f0f0f0;
+         background-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
